@@ -5,6 +5,7 @@ import Data.List
 import System.IO
 import Data.String
 
+
 {-| TESTS
 smallestKset [1,2,3,4,5] 2
 smallestKset [x*(-1)^x | x <- [1..100]] 15
@@ -12,7 +13,8 @@ smallestKset [24,-11,-34,42,-24,7,-19,21] 6
 smallestKset [3,2,-4,3,2,-5,-2,2,3,-3,2,-5,6,-2,2,3] 8
 -}
 
-main = smallestKset [3,2,-4,3,2,-5,-2,2,3,-3,2,-5,6,-2,2,3] 8 
+main = 
+    smallestKset [x*(-1)^x | x <- [1..100]] 15
     --print (sumList [1,2,3,4,5,-6]) 
     --print (sumList2 [1,2,3,4,5,-6])
 
@@ -32,6 +34,7 @@ resultPrint (x:xs) =  subResult x ++ "\n" ++ resultPrint xs  --show convert valu
 
 subResult :: (Int, Int, Int,[Int]) -> String
 --subResult [] = [] NO need for this.
+
 subResult (size,i,j,list) = show size ++ "\t" ++ show i ++ "\t" ++ show j ++ "\t"++ show list
 
 {-| Alternative with recursion
@@ -104,7 +107,8 @@ sortLists (x:xs) = inList x (sortLists xs)
     -- else place second element first and recurse call.
 inList :: (Int, Int, Int, [Int]) -> [(Int, Int, Int, [Int])] -> [(Int, Int, Int, [Int])] 
 inList (w,x,y,z) [] = [(w,x,y,z)]
-inList (w,x,y,z) ((s,i,j,l):list) | sumList z < sumList l = (w,x,y,z):((s,i,j,l):list)  
+inList (w,x,y,z) ((s,i,j,l):list) 
+    | sumList z < sumList l = (w,x,y,z):((s,i,j,l):list)  
     | otherwise = (s,i,j,l):inList (w,x,y,z) list
 
 
