@@ -20,7 +20,7 @@ data Statement =
     While Expr.T Statement | -- 'while' expr 'do' statement
     Skip | --String?? semicolon or nothing?
     Begin [Statement] | -- List of statements. 'begin' statements 'end'
-    Replicate Expr.T Statement | -- creates a list of length given by the first argument and the items having value of the second argument
+    Replicate Statement Expr.T | -- creates a list of length given by the first argument and the items having value of the second argument
     Read String | --Variable  'read' variable ';'
     Write Expr.T
     deriving Show
@@ -90,9 +90,16 @@ exec (Begin stmt:statements) dic inp = --
     exec (stmt ++ statements) dic inp -- Should it be stmt ++ statements?? or try with just statements
 
 exec (Replicate e stmt:statements) dic inp = 
+    exec (e : nextStatement) dic inp 
+        where 
+            nextStatement 
+                | Expr.value stmt dic <= 0 = Replicate e stmt:statements
+                | otherwise = statements
+{-| 
     if (Expr.value e dic)>=0
         then exec (stmt:(Replicate e stmt):statements) dic inp -- SAME AS WHILE 
             else exec (statements) dic inp-- 
+-}
 
 exec (Read str:stmts) dic (inp:input) = -- Need to add it do dictionary?
     exec stmts (Dictionary.insert (str,inp) dic) input -- 
@@ -137,8 +144,8 @@ strShow (Begin stmts) = foldl (++) "begin\n"
     --" end\n"
     
 
-strShow (Replicate exp stmt) = "repeat\n" ++ --Should maybe set as replicate "statement" until "expression"... more readable
-    strShow stmt ++
+strShow (Replicate st exp) = "repeat\n" ++ --Should maybe set as replicate "statement" until "expression"... more readable
+    strShow st ++
     "until " ++
     Expr.toString exp ++
     "\n" 

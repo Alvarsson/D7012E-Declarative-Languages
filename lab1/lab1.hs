@@ -91,6 +91,18 @@ makeSubsets (x:xs) counter = [ (sumList (take val (x:xs)), counter , (counter + 
     where 
         size = length (x:xs)
 
+{-| 
+--[1,2,3,4]
+-- 0,0,[1]
+--
+
+makeSubs2 :: [Int] -> Int -> [(Int, Int, [Int])]
+makeSubs2 (x:xs) count = [ count, (count (val-1)) , func2 list count (val-1) | val <- [1..size]] ++ makesubs2 xs count+1
+    where 
+        size = lenght (x:xs)
+
+-}
+
 --smallestKset should print out 
 smallestKset :: [Int] -> Int -> IO ()
 smallestKset [] number = error "The list is empty, invalid input"

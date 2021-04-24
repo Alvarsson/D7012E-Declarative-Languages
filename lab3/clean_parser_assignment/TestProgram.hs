@@ -33,8 +33,20 @@ p1 = fromString  ("\
 \  end\
 \write s;")
 
+p2 :: Program.T
+p2 = fromString ("\
+\read k;\
+\write k;\
+\repeat\
+\ begin\
+\ k := k + 1;\
+\ write k;\
+\ end \
+\until k;")
+
 sp = putStr (toString p)
 
+pr = Program.exec p2 [5]
 rp = Program.exec p [3,16]
 
 rp1 = Program.exec p1 [1024, 2]

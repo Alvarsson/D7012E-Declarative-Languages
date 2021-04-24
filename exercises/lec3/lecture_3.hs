@@ -155,3 +155,6 @@ elem1 _ [] = False
 elem1 n (y:xs) 
     | (\x -> y==n) xs = True
     | otherwise = elem1 n xs
+
+
+
