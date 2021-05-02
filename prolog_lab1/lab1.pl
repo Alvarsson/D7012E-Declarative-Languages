@@ -28,7 +28,7 @@ solveR( CurrentRoom, N, Trace) :- N > 0,
     Trace = [Move | RestTrace]. %same as haskells x:xs in a way
 
 
-%%%%% Some simplifying predicate
+%%%%% Some simplifying predicates
 validToPick(A, B) :-
     A = B,
     A == B.

@@ -30,7 +30,7 @@ Not ~ Not
 Or V ;
 and ^ ,
 
-\+  not provable, succeds if its argument is not provable
+\+  not provable, succeds if its argument is not provable (not in a way)
 
 
 */

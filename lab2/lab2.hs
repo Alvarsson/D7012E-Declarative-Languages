@@ -11,7 +11,7 @@ main = do
     print(parse "sqrt(1+sin(x))")
     -- testing some stuff
     print "--------testing for part one-------------"
-    print(unparse (simplify (diff (Var "x") (parse "exp(sin(2*x))"))))
+  
     print(unparse (simplify (diff (Var "x") (parse "sin(2*x)"))))
     print(unparse (simplify (diff (Var "x") (parse "cos(2*x)"))))
     print(unparse (simplify (diff (Var "x") (parse "log(x)"))))
