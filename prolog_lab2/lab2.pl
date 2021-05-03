@@ -56,6 +56,7 @@ helpFunc(List,SetList) :-
 */
 
 % FFFFFFUUUUUU.... order matters apperantly. 
+
 createSetFromSubs(List, Index1, Index2, SetList) :-
     makeSubset(List, Index1, Index2,SetOut), %make the subset
     sumList(SetOut, Sum), % ListSum = sumList(Sub,Sum), duh can just use Sum
@@ -69,6 +70,7 @@ createSetFromSubs(List,Index1,_,MemList) :- %increment I and the recurse with ab
     createSetFromSubs(List,Iindex,Iindex,MemList),!. %no backtrack!
 createSetFromSubs(_,EQUAL,EQUAL,[]).%base case with empty inlist
 
+%Need to create the sets, sort the sets, then show the asked amount
 smallestKSets(K,InList,PrintOut) :-
     createSetFromSubs(InList,0,0,SetOut), %create the set with all subsets
     %helpFunc(InList, SetOut),
@@ -82,8 +84,28 @@ getAskedKSets(Ksmall,[H|T],KSets) :-
     getAskedKSets(Count,T,ShortList),
     KSets = [H |ShortList].
 
+tester() :-
+    smallestKSets(3,[-1,2,-3,4,-5],Out1),
+    write(Out1),
+    nl,
+    nl,
+    smallestKSets(6, [24,-11,-34,42,-24,7,-19,21],Out2),
+    write(Out2),
+    nl,
+    nl,
+    smallestKSets(8, [3,2,-4,3,2,-5,-2,2,3,-3,2,-5,6,-2,2,3],Out3),
+    write(Out3),
+    nl,
+    nl,
+    %findall(X,f(a,X),Bag,Tail).
+    findall(P, (between(1,100,I), P is I*(-1)^I), LongTest),
+    %P is I*(-1)^I,
+    smallestKSets(15, LongTest,Out4),
+    write(Out4),
+    nl. %newline to make pretty :)
 
-
+%NOTE! Indexing is off by one since we start at index 0,
+% but that doesn't feel all to important.
 
 
 
