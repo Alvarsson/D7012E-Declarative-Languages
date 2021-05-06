@@ -68,10 +68,10 @@
 
 initBoard([ [.,.,.,.,.,.], 
             [.,.,.,.,.,.],
-	    [.,.,1,2,.,.], 
-	    [.,.,2,1,.,.], 
+	    	[.,.,1,2,.,.], 
+	    	[.,.,2,1,.,.], 
             [.,.,.,.,.,.], 
-	    [.,.,.,.,.,.] ]).
+	    	[.,.,.,.,.,.] ]).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -79,6 +79,9 @@ initBoard([ [.,.,.,.,.,.],
 %%% Using initBoard define initialize(InitialState,InitialPlyr). 
 %%%  holds iff InitialState is the initial state and 
 %%%  InitialPlyr is the player who moves first. 
+
+initialize(InitialState,1) :- 
+	initBoard(InitialState).
 
 
 
@@ -92,9 +95,43 @@ initBoard([ [.,.,.,.,.,.],
 %     - returns winning player if State is a terminal position and
 %     Plyr has a higher score than the other player 
 
+winner(State,Plyr) :-
+	terminal(State),!, %if terminal state is true, cant backtrack since its always true
+	getScore(State, Plyr1, Plyr2), 
+	Plyr1 =\= Plyr2,
+	(Plyr1 < Plyr2) ->  Plyr = 1 ; Plyr = 2.%if then else predicate
 
 
 
+getScore(State, Player1Score,Player2Score) :-
+	score(State,1,Player1Score),
+	score(State,2,Player2Score).
+	%Plyr1 is Player1Score,
+	%Plyr2 is Player2Score.
+
+%Check amount of stones on the board for player
+
+score(State,Player, PlayerScore) :-
+    Counter is 0,
+    iterMatrix(State, I, J, Value),
+    checkVal(Value,Player,Counter,NextCount, NewScore),
+    incrementScore(NextCount, NewScore, PlayerScore),!.
+
+%iterate function based on https://stackoverflow.com/questions/34949724/prolog-iterate-through-matrix
+iterMatrix(State,I,J, Value) :-
+    nth0(I, State, Row),
+    nth0(J, Row, Value).
+
+checkVal('.',_,_, 0).
+checkVal(Value, Player,_, 0) :- Value \= Player.
+checkVal(Value, Player, Counter, NextCount, 1) :- 
+    Value = Player, 
+    incrementVar(Counter, NextCount).
+
+incrementVar(X, X1) :- X1 is X+1.
+
+incrementScore(Counter,Value, FinalScore) :- 
+    FinalScore is Counter+Value.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -102,6 +139,8 @@ initBoard([ [.,.,.,.,.,.],
 %%
 %% define tie(State) here. 
 %    - true if terminal State is a "tie" (no winner) 
+
+tie(State) :-
 
 
 
