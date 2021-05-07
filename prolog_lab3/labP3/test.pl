@@ -61,13 +61,14 @@ incrementScore(Counter,Value, FinalScore) :-
 %retry but with lists
 winner(State,Plyr) :-
 	%terminal(State),!, %if terminal state is true, cant backtrack since its always true
-	getScore(State, Plyr1, Plyr2),
-	Plyr1 =\= Plyr2,
-	(Plyr1 < Plyr2) ->  Plyr = 1 ; Plyr = 2.%if then else predicate
+	getScore(State, 1, Plyr1Score),!,
+    getScore(State, 2, Plyr2Score),!,
+	Plyr1Score =\= Plyr2Score,
+	((Plyr1Score < Plyr2Score) ->  Plyr = 2 ; Plyr = 1).%if then else predicate
 
-getScore(State, Player1Score, Player2Score) :-
-    calcPlayerScore(State, 1, Player1Score),
-    calcPlayerScore(State, 2, Player2Score).
+getScore(State, Player, PlayerScore) :-
+    calcPlayerScore(State, Player, ScoreList),!,
+    length(ScoreList, PlayerScore),!.
 
 calcPlayerScore(State, Player, Score) :- 
     calcPlayerScore(State, Player, Score, 0,0).
@@ -81,15 +82,15 @@ calcPlayerScore(State,Player, Score,Row, Column) :-
 calcPlayerScore(State, Player, Score, I, J) :-
     Row is I,
     Column is J,
-    iterMatrix(State, [Row, Column], Value) -> Score = [[Row, Column]|NextStone] ; Score = NextStone,
-    calcPlayerScore(State, Player, Score, I, J+1),!. %stop backtrack.
+    (iterMatrix(State, [Row, Column], Player) -> Score = [[Row, Column]|NextStone] ; Score = NextStone),
+    calcPlayerScore(State, Player, NextStone, I, J+1),!. %stop backtrack.
 
 iterMatrix(State, [I,J], Value) :-
     nth0(I, State, Row),
     nth0(J, Row, Value).
 
 
-
+/**
 
 getScore(State, Player1Score,Player2Score) :-
 	score(State,1,Player1Score),!,
@@ -122,3 +123,4 @@ incrementVar(X, X1) :- X1 is X+1.
 
 incrementScore(Counter,Value, FinalScore) :- 
     FinalScore is Counter+Value.
+*/

@@ -95,33 +95,39 @@ initialize(InitialState,1) :-
 %     - returns winning player if State is a terminal position and
 %     Plyr has a higher score than the other player 
 
+%retry but with lists
 winner(State,Plyr) :-
-	terminal(State),!, %if terminal state is true, cant backtrack since its always true
-	getScore(State, Plyr1, Plyr2), 
-	Plyr1 =\= Plyr2,
-	(Plyr1 < Plyr2) ->  Plyr = 1 ; Plyr = 2.%if then else predicate
+	%terminal(State),!, %if terminal state is true, cant backtrack since its always true
+	getScore(State, 1, Plyr1Score),!,
+    getScore(State, 2, Plyr2Score),!,
+	Plyr1Score =\= Plyr2Score,
+	((Plyr1Score < Plyr2Score) ->  Plyr = 2 ; Plyr = 1).%if then else predicate
 
-
-
-getScore(State, Player1Score,Player2Score) :-
-	score(State,1,Player1Score),
-	score(State,2,Player2Score).
-	%Plyr1 is Player1Score,
-	%Plyr2 is Player2Score.
+getScore(State, Player, PlayerScore) :-
+    calcPlayerScore(State, Player, ScoreList),!,
+    length(ScoreList, PlayerScore),!.
 
 %Check amount of stones on the board for player
+calcPlayerScore(State, Player, Score) :- 
+    calcPlayerScore(State, Player, Score, 0,0).
 
-score(State,Player, PlayerScore) :-
-    Counter is 0,
-    iterMatrix(State, I, J, Value),
-    checkVal(Value,Player,Counter,NextCount, NewScore),
-    incrementScore(NextCount, NewScore, PlayerScore),!.
+calcPlayerScore(_, _, [], Row, Column) :-
+    Row >5,
+    Column >5.
+calcPlayerScore(State,Player, Score,Row, Column) :-
+    Column >5, % need to reset in this basecase
+    calcPlayerScore(State, Player, Score, Row+1, 0),!. %no backtracking from this stage.
+calcPlayerScore(State, Player, Score, I, J) :-
+    Row is I,
+    Column is J,
+    (iterMatrix(State, [Row, Column], Player) -> Score = [[Row, Column]|NextStone] ; Score = NextStone),
+    calcPlayerScore(State, Player, NextStone, I, J+1),!. %stop backtrack.
 
 %iterate function based on https://stackoverflow.com/questions/34949724/prolog-iterate-through-matrix
 iterMatrix(State,I,J, Value) :-
     nth0(I, State, Row),
     nth0(J, Row, Value).
-
+/** part of number increment attempt, lists is most likely smarter.
 checkVal('.',_,_, 0).
 checkVal(Value, Player,_, 0) :- Value \= Player.
 checkVal(Value, Player, Counter, NextCount, 1) :- 
@@ -132,7 +138,7 @@ incrementVar(X, X1) :- X1 is X+1.
 
 incrementScore(Counter,Value, FinalScore) :- 
     FinalScore is Counter+Value.
-
+*/
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%tie(...)%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,8 +147,10 @@ incrementScore(Counter,Value, FinalScore) :-
 %    - true if terminal State is a "tie" (no winner) 
 
 tie(State) :-
-
-
+	terminal(State),!,
+	getScore(State, 1, Plyr1Score),!,
+	getScore(State, 2, Plyr2Score),!,
+	Plyr1Score = Plyr2Score.
 
 
 
