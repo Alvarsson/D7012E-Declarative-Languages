@@ -56,7 +56,7 @@ incrementVar(X, X1) :- X1 is X+1.
 
 incrementScore(Counter,Value, FinalScore) :- 
     FinalScore is Counter+Value.
-*/
+
 
 %retry but with lists
 winner(State,Plyr) :-
@@ -89,7 +89,7 @@ iterMatrix(State, [I,J], Value) :-
     nth0(I, State, Row),
     nth0(J, Row, Value).
 
-
+*/
 /**
 
 getScore(State, Player1Score,Player2Score) :-
@@ -124,3 +124,8 @@ incrementVar(X, X1) :- X1 is X+1.
 incrementScore(Counter,Value, FinalScore) :- 
     FinalScore is Counter+Value.
 */
+
+
+
+
+

@@ -161,8 +161,13 @@ tie(State) :-
 %% define terminal(State). 
 %   - true if State is a terminal   
 
+terminal(State) :-
+	% i.e. true if there are no more moves available.
+	checkMoves(State, 1, Empty1),!,
+	checkMoves(State, 2, Empty2),!,
+	Empty1 = 
 
-
+checkMoves(State, Player, MoveList)
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
