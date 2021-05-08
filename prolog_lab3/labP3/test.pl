@@ -4,7 +4,7 @@
 
 
 grid([      [.,.,.,.,.,.], 
-            [.,.,.,.,.,.],
+            [.,.,1,.,.,.],
 	    	[.,.,1,2,.,.], 
 	    	[.,.,2,1,.,.], 
             [.,.,.,.,.,.], 
@@ -146,8 +146,8 @@ printer(Dir) :-
     write(Current),nl,nl,
     printer(Next).
 */
-%---------------------------------------------------------------
-/**
+%-------------------------------------------------------------------
+
 calcPlayerScore(State, Player, Score) :- 
     calcPlayerScore(State, Player, Score, 0,0).
 
@@ -180,10 +180,10 @@ terminal(State) :-
 
 checkMoves(State,Player, MoveList) :-
 	calcPlayerScore(State, Player, StoneList),
-	checkMoves(State, Player,StoneList, AllMoves),
-	AllMoves \= [] -> msort(AllMoves, MoveList) ;  MoveList = [pass]. % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+	checkMoves(State, Player,StoneList, AllMoves), % stone list is coordinate of player stone for example [2,2] 
+	(AllMoves = [] -> MoveList = [pass] ; sort(AllMoves, MoveList)). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
 
-checkMoves(State, Player, [DxDy,Positions],MoveList) :-
+checkMoves(State, Player, [DxDy|Positions],MoveList) :-
 	%need to find the opposite player, then find possible moves.
 	getOtherPlayer(Player, OtherPlayer),
 	checkMoves(State, Player, Positions, PossibleMoves),!, %get the moves 
@@ -197,13 +197,73 @@ checkMoves(_,_,[],[]).
 %			[6, 7 ,8].
 %x and y from -1 to 1.
 %
-directions( [[-1,1],[0,1],[1,1], [-1,0],[1,0], [-1,-1],[0,-1],[1,-1]] ).
+directions( [   [-1,1],
+                [0,1],
+                [1,1],
+                [-1,0],
+                [1,0],
+                [-1,-1],
+                [0,-1],
+                [1,-1]  ] ).
 %take current coordinate and give next, only need to pick next in list of directions until empty
 nextDirection([]).
 nextDirection([Current|NextPosition], Current, NextPosition).
 
+addLists([],[],[]).
+addLists([H1|T1], [H2|T2], [NewList|NewTail]) :-
+    addLists(T1, T2, NewTail), NewList is H1+H2.
+%getCoordinates([X|Y], X, Y).
+
+getCoordinate(CoordList,C, Out) :-
+    nth0(C, CoordList, Out).
+
+getAllMoves(State,Player, OtherPlayer,StoneList, Moves) :-
+    directions(C_List),
+    getAllMoves(State, Player, OtherPlayer, StoneList, Moves, C_List).
+
+getAllMoves(State, Player, OtherPlayer, StoneList, Moves, [FirstCheck|Rest]) :-
+    getAllMoves(State, Player, OtherPlayer, StoneList, Next_Moves, Rest),
+    (getAMove(State,Player,OtherPlayer, StoneList, FirstCheck, Player, ThisMove) ->
+        Moves = [ThisMove|Next_Moves] 
+    ; 
+        Moves = Next_Moves).
+
+getAllMoves(_,_,_,_,[],[]). %base
+
+getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
+    addLists([Cx, Cy], [Nx, Ny], NewCoordinates),
+    %getCoordinates(NewCoordinates, X, Y),
+    getCoordinate(NewCoordinates,0,X),
+    getCoordinate(NewCoordinates,1,Y),
+    write(X),
+    write(Y),
+    iterMatrix(State, [X,Y], Square),
+    \+(Square = Player),
+    ( 
+        (Square = OtherPlayer),
+        getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove)
+    ; 
+        (Square = ., P = OtherPlayer),
+         
+        ThisMove = [X,Y]
+    ). %check other player stone in "the way".
+
+getOtherPlayer(Me, Other) :-
+	Me = 1 -> Other is 2 ; Other is 1.
 
 
+%---------------------------------------------------------------------
+
+%getCoordinate(CoordList,C, Out) :-
+%    nth0(C, CoordList, Out).
+
+%list_sum([],[],[]).
+%list_sum([H1|T1],[H2|T2],[X|L3]):-list_sum(T1,T2,L3), X is H1+H2.
+%addLists([],[],[]).
+%addLists([H1|T1], [H2|T2], [NewList|NewTail]) :-
+%    addLists(T1, T2, NewTail), NewList is H1+H2.
+
+/**
 getAllMoves(State, Player, OtherPlayer, DxDy, Moves) :-
 	directions(Directions),
 	getAllMoves(State, Player, OtherPlayer, DxDy, Moves, Directions). %pass list of all directions
@@ -224,7 +284,9 @@ getTheMove(State, Player, OtherPlayer, Coordinate, [X,Y], TheMove, P) :-
 
 getOtherPlayer(Me, Other) :-
 	Me = 1 -> Other is 2 ; Other is 1.
+
 */
+/**
 calcPlayerScore(State, Player, Score) :- 
     calcPlayerScore(State, Player, Score, 0,0).
 
@@ -249,6 +311,7 @@ iterMatrix(State,[I,J], Value) :-
 
 moves(Plyr, State, MvList) :-
 	calcPlayerScore(State, Plyr, Pieces),
+    write(Pieces),
 	moves(Plyr, State, Pieces, UnsortedMvList),
 	(UnsortedMvList = [] ->
 		MvList = [n]
@@ -319,4 +382,4 @@ get( Board, [X, Y], Value) :-
 	nth0( X, ListY, Value).
 
 
-
+*/
