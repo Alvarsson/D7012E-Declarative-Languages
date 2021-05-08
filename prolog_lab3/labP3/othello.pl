@@ -168,48 +168,77 @@ terminal(State) :-
 	Empty1 = [pass],
 	Empty2 = [pass].
 
-checkMoves(_,_,[],[]).
+
 
 checkMoves(State,Player, MoveList) :-
 	calcPlayerScore(State, Player, StoneList),
-	checkMoves(State, Player,StoneList, AllMoves),
-	AllMoves \= [] -> msort(AllMoves, MoveList) ;  MoveList = [pass] % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
-checkMoves(State, Player, [DxDy,Positions],MoveList) :-
+	checkMoves(State, Player,StoneList, AllMoves), % stone list is coordinate of player stone for example [2,2] 
+	(AllMoves = [] -> MoveList = [pass] ; sort(AllMoves, MoveList)). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+
+checkMoves(State, Player, [DxDy|Positions],MoveList) :-
 	%need to find the opposite player, then find possible moves.
 	getOtherPlayer(Player, OtherPlayer),
 	checkMoves(State, Player, Positions, PossibleMoves),!, %get the moves 
-	getAllMoves(State, Player, OtherPlayer, DxDy, Moves) -> append(Moves, PossibleMoves, MoveList). ; MoveList = PossibleMoves.
+	(getAllMoves(State, Player, OtherPlayer, DxDy, Moves) -> append(Moves, PossibleMoves, MoveList) ; MoveList = PossibleMoves).
 
+checkMoves(_,_,[],[]).
 % How to define this without a lot of pattern matching? DxDy traversal in a grid?
-/**
-directions: [1, 2 ,3],
-			[4,pos,5],
-			[6, 7 ,8].
-x and y from -1 to 1.
-*/
-directions( [[-1,1],[0,1],[1,1], [-1,0],[1,0], [-1,-1],[0,-1],[1,-1]] ).
+%
+%directions: [1, 2 ,3],
+%			[4,pos,5],
+%			[6, 7 ,8].
+%x and y from -1 to 1.
+%
+directions( [   [-1,1],
+                [0,1],
+                [1,1],
+                [-1,0],
+                [1,0],
+                [-1,-1],
+                [0,-1],
+                [1,-1]  ] ).
 %take current coordinate and give next, only need to pick next in list of directions until empty
 nextDirection([]).
-nextDirection(Current|NextPosition], Current, NextPosition).
+nextDirection([Current|NextPosition], Current, NextPosition).
 
+addLists([],[],[]).
+addLists([H1|T1], [H2|T2], [NewList|NewTail]) :-
+    addLists(T1, T2, NewTail), NewList is H1+H2.
+%getCoordinates([X|Y], X, Y).
 
+getCoordinate(CoordList,C, Out) :-
+    nth0(C, CoordList, Out).
 
-getAllMoves(State, Player, OtherPlayer, DxDy, Moves) :-
-	directions(Directions),
-	getAllMoves(State, Player, OtherPlayer, DxDy, Moves, Directions). %pass list of all directions
+getAllMoves(State,Player, OtherPlayer,StoneList, Moves) :-
+    directions(C_List),
+    getAllMoves(State, Player, OtherPlayer, StoneList, Moves, C_List).
 
-getAllMoves(State, Player, OtherPlayer, DxDy, Moves, [H|Dir]):- %[H|T] , [H|Dir]
-	getAllMoves(State, Player, OtherPlayer, DxDy, Next, Dir), % , Dir
-	getTheMove(State,Player,OtherPlayer, DxDy, H, Current, Player) -> Moves = [Current|Next] ; Moves = Next.
+getAllMoves(State, Player, OtherPlayer, StoneList, Moves, [FirstCheck|Rest]) :-
+    getAllMoves(State, Player, OtherPlayer, StoneList, Next_Moves, Rest),
+    (getAMove(State,Player,OtherPlayer, StoneList, FirstCheck, Player, ThisMove) ->
+        Moves = [ThisMove|Next_Moves] 
+    ; 
+        Moves = Next_Moves).
 
-getAllMoves(_, _, _, _, [],[]).
+getAllMoves(_,_,_,_,[],[]). %base
 
-getTheMove(State, Player, OtherPlayer, Coordinate, [X,Y], TheMove, P) :-
-	%nextDirection(Coordinate, Current, Next),
-	iterMatrix(State,[X,Y], Square), \+ Square = Player,
-	(Square = OtherPlayer,
-	getTheMove(State, Player, OtherPlayer, Coordinate, [X,Y],TheMove, P) ; Square = . P = OtherPlayer, TheMove =[X,Y]).
-
+getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
+    addLists([Cx, Cy], [Nx, Ny], NewCoordinates),
+    %getCoordinates(NewCoordinates, X, Y),
+    getCoordinate(NewCoordinates,0,X),
+    getCoordinate(NewCoordinates,1,Y),
+    write(X),
+    write(Y),
+    iterMatrix(State, [X,Y], Square),
+    \+(Square = Player),
+    ( 
+        (Square = OtherPlayer),
+        getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove)
+    ; 
+        (Square = ., P = OtherPlayer),
+         
+        ThisMove = [X,Y]
+    ). %check other player stone in "the way".
 
 getOtherPlayer(Me, Other) :-
 	Me = 1 -> Other is 2 ; Other is 1.

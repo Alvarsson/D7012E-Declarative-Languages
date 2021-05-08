@@ -224,9 +224,7 @@ getAllMoves(State,Player, OtherPlayer,StoneList, Moves) :-
 getAllMoves(State, Player, OtherPlayer, StoneList, Moves, [FirstCheck|Rest]) :-
     getAllMoves(State, Player, OtherPlayer, StoneList, Next_Moves, Rest),
     (getAMove(State,Player,OtherPlayer, StoneList, FirstCheck, Player, ThisMove) ->
-        Moves = [ThisMove|Next_Moves] 
-    ; 
-        Moves = Next_Moves).
+        Moves = [ThisMove|Next_Moves] ; Moves = Next_Moves).
 
 getAllMoves(_,_,_,_,[],[]). %base
 
@@ -235,18 +233,9 @@ getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
     %getCoordinates(NewCoordinates, X, Y),
     getCoordinate(NewCoordinates,0,X),
     getCoordinate(NewCoordinates,1,Y),
-    write(X),
-    write(Y),
     iterMatrix(State, [X,Y], Square),
     \+(Square = Player),
-    ( 
-        (Square = OtherPlayer),
-        getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove)
-    ; 
-        (Square = ., P = OtherPlayer),
-         
-        ThisMove = [X,Y]
-    ). %check other player stone in "the way".
+    ( (Square = OtherPlayer), getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove) ; (Square = ., P = OtherPlayer), ThisMove = [X,Y]). %check other player stone in "the way".
 
 getOtherPlayer(Me, Other) :-
 	Me = 1 -> Other is 2 ; Other is 1.
