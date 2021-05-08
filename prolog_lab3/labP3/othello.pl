@@ -124,7 +124,7 @@ calcPlayerScore(State, Player, Score, I, J) :-
     calcPlayerScore(State, Player, NextStone, I, J+1),!. %stop backtrack.
 
 %iterate function based on https://stackoverflow.com/questions/34949724/prolog-iterate-through-matrix
-iterMatrix(State,I,J, Value) :-
+iterMatrix(State,[I,J], Value) :-
     nth0(I, State, Row),
     nth0(J, Row, Value).
 /** part of number increment attempt, lists is most likely smarter.
@@ -162,12 +162,57 @@ tie(State) :-
 %   - true if State is a terminal   
 
 terminal(State) :-
-	% i.e. true if there are no more moves available.
+	% i.e. true if there are no more moves available. Ahh that is if only pass moves are still avail.
 	checkMoves(State, 1, Empty1),!,
 	checkMoves(State, 2, Empty2),!,
-	Empty1 = 
+	Empty1 = [pass],
+	Empty2 = [pass].
 
-checkMoves(State, Player, MoveList)
+checkMoves(_,_,[],[]).
+
+checkMoves(State,Player, MoveList) :-
+	calcPlayerScore(State, Player, StoneList),
+	checkMoves(State, Player,StoneList, AllMoves),
+	AllMoves \= [] -> msort(AllMoves, MoveList) ;  MoveList = [pass] % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+checkMoves(State, Player, [DxDy,Positions],MoveList) :-
+	%need to find the opposite player, then find possible moves.
+	getOtherPlayer(Player, OtherPlayer),
+	checkMoves(State, Player, Positions, PossibleMoves),!, %get the moves 
+	getAllMoves(State, Player, OtherPlayer, DxDy, Moves) -> append(Moves, PossibleMoves, MoveList). ; MoveList = PossibleMoves.
+
+% How to define this without a lot of pattern matching? DxDy traversal in a grid?
+/**
+directions: [1, 2 ,3],
+			[4,pos,5],
+			[6, 7 ,8].
+x and y from -1 to 1.
+*/
+directions( [[-1,1],[0,1],[1,1], [-1,0],[1,0], [-1,-1],[0,-1],[1,-1]] ).
+%take current coordinate and give next, only need to pick next in list of directions until empty
+nextDirection([]).
+nextDirection(Current|NextPosition], Current, NextPosition).
+
+
+
+getAllMoves(State, Player, OtherPlayer, DxDy, Moves) :-
+	directions(Directions),
+	getAllMoves(State, Player, OtherPlayer, DxDy, Moves, Directions). %pass list of all directions
+
+getAllMoves(State, Player, OtherPlayer, DxDy, Moves, [H|Dir]):- %[H|T] , [H|Dir]
+	getAllMoves(State, Player, OtherPlayer, DxDy, Next, Dir), % , Dir
+	getTheMove(State,Player,OtherPlayer, DxDy, H, Current, Player) -> Moves = [Current|Next] ; Moves = Next.
+
+getAllMoves(_, _, _, _, [],[]).
+
+getTheMove(State, Player, OtherPlayer, Coordinate, [X,Y], TheMove, P) :-
+	%nextDirection(Coordinate, Current, Next),
+	iterMatrix(State,[X,Y], Square), \+ Square = Player,
+	(Square = OtherPlayer,
+	getTheMove(State, Player, OtherPlayer, Coordinate, [X,Y],TheMove, P) ; Square = . P = OtherPlayer, TheMove =[X,Y]).
+
+
+getOtherPlayer(Me, Other) :-
+	Me = 1 -> Other is 2 ; Other is 1.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
