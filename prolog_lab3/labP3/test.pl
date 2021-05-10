@@ -4,7 +4,7 @@
 
 
 grid([      [.,.,.,.,.,.], 
-            [.,.,1,.,.,.],
+            [.,.,.,.,.,.],
 	    	[.,.,1,2,.,.], 
 	    	[.,.,2,1,.,.], 
             [.,.,.,.,.,.], 
@@ -12,6 +12,31 @@ grid([      [.,.,.,.,.,.],
 
 testGrid([  [a,b,c],
             [d,e,f] ]).
+
+
+
+
+set( [Row|RestRows], [NewRow|RestRows], [X, 0], Value) :-
+    setInList(Row, NewRow, X, Value). 
+
+set( [Row|RestRows], [Row|NewRestRows], [X, Y], Value) :-
+    Y > 0, 
+    Y1 is Y-1, 
+    set( RestRows, NewRestRows, [X, Y1], Value). 
+
+% DO NOT CHANGE THIS BLOCK OF COMMENTS.
+%
+% setInList( List, NewList, Index, Value): given helper to set. Do not
+% change setInList:
+
+setInList( [_|RestList], [Value|RestList], 0, Value). 
+
+setInList( [Element|RestList], [Element|NewRestList], Index, Value) :- 
+	Index > 0, 
+	Index1 is Index-1, 
+	setInList( RestList, NewRestList, Index1, Value). 
+ 
+
 
 /**
 score(State,Player, PlayerScore) :-
@@ -148,6 +173,7 @@ printer(Dir) :-
 */
 %-------------------------------------------------------------------
 
+
 calcPlayerScore(State, Player, Score) :- 
     calcPlayerScore(State, Player, Score, 0,0).
 
@@ -181,7 +207,8 @@ terminal(State) :-
 checkMoves(State,Player, MoveList) :-
 	calcPlayerScore(State, Player, StoneList),
 	checkMoves(State, Player,StoneList, AllMoves), % stone list is coordinate of player stone for example [2,2] 
-	(AllMoves = [] -> MoveList = [pass] ; sort(AllMoves, MoveList)). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+	(AllMoves \= [] -> msort(AllMoves, MoveList) ; MoveList = [pass]). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+%msort to remove possible duplicates, will not have duplicates it is correct though. But i guess good to be safe.
 
 checkMoves(State, Player, [DxDy|Positions],MoveList) :-
 	%need to find the opposite player, then find possible moves.
@@ -239,6 +266,54 @@ getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
 
 getOtherPlayer(Me, Other) :-
 	Me = 1 -> Other is 2 ; Other is 1.
+
+
+%------------------------------------------------------------------
+nextState(Plyr, [pass], State, NewState, NextPlyr) :- 
+    NewState is State,
+    nextPlayer(State, Plyr, NextPlyr). 
+%move is in list form of [int, int]
+nextState(Plyr, Move, State, NewState, NextPlyr) :-
+    % Need to check if move is legit, and if so do a stone change.
+    % So no pass, thus this move must be made !as long as it conforms to legit move list!
+    doMove(State, Plyr, Move, NewState),
+    nextPlayer(State, Plyr, NextPlyr).
+    
+    %validmove() no need since we call this in play.pl
+
+doMove(State, Player, Move, NextState) :-
+    % set( Board, NewBoard, [X, Y], Value): set the value of the board at position
+    set(State, NewState, Move, Value),
+    getOtherPlayer(Player, OtherPlayer),
+    directions(C_List),
+    doMove(NewState, Value, Move, NextState, OtherPlayer, C_List).
+
+doMove(NState, Player, Move, NextState, OtherPlayer, [C|NextC]) :-
+    % change state if possible, otherwise give back same state
+    (changeStones(NState, Player, Move, OtherPlayer,C, StateChanged) -> Change = StateChanged ; Change = NState),
+    doMove(Change, Player, Move, NextState, OtherPlayer, NextC).
+
+%Not "doable" if player stone thus stop rec
+changeStones(State, Player, [Cx, Cy],_, [Nx,Ny], State) :-
+    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),% Should have done a function for this procedure
+    getCoordinate(NewCoordinates, 0, X),
+    getCoordinate(NewCoordinates, 1, Y),
+    iterMatrix(State, [X,Y], Player). 
+
+changeStones(State, Player, [Cx,Cy], OtherPlayer, [Nx,Ny], StateChanged) :-
+    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
+    getCoordinate(NewCoordinates, 0, X),
+    getCoordinate(NewCoordinates, 1, Y),
+    iterMatrix(State, [X,Y], Square), %Checking only for opponent stones
+    Square = OtherPlayer,
+    changeStones(State, Player, [X,Y], OtherPlayer, [Nx|Ny], SChange),
+    set(SChange, StateChanged, [X,Y], Player).
+
+
+%need to 
+nextPlayer(State, Player, NextPlayer) :-
+    getOtherPlayer(Player, OtherPlayer), % simply get other player from helper
+    (checkMoves(State, OtherPlayer, []) -> NextPlayer = Player, NextPlayer = OtherPlayer).
 
 
 %---------------------------------------------------------------------
@@ -370,5 +445,56 @@ get( Board, [X, Y], Value) :-
 	nth0( Y, Board, ListY), 
 	nth0( X, ListY, Value).
 
+
+
+makeMove(State, Plyr, Move, NewState) :-
+	getOpponent(Plyr, Opp),
+	set(State, S, Move, Plyr),
+	makeMove(S, Plyr, Opp, Move,
+	['N', 'S', 'E', 'W', 'NW', 'NE', 'SW', 'SE'], NewState).
+makeMove(State, Plyr, Opp, Move, [Wind|Tail], NewState) :-
+	(flipSlots(State, Plyr, Opp, Move, Wind, FlippedState) ->
+		S = FlippedState % Update state.
+	;
+		S = State % Keep old state, none are flipped.
+	),
+	makeMove(S, Plyr, Opp, Move, Tail, NewState).
+makeMove(State, _Plyr, _Opp, _Move, [], State).
+
+% Check if next slot is the same as player.
+flipSlots(State, Plyr, _Opp, [X, Y], Wind, State) :-
+	nextCoord([X, Y], Wind, [Xi, Yi]),
+	get(State, [Xi, Yi], Plyr). % End player slot found, end recursion.
+
+% Look for opponent in next slot, and if so continue search until a player slot
+% is found, or fail if none is found.
+flipSlots(State, Plyr, Opp, [X, Y], Wind, NewState) :-
+	nextCoord([X, Y], Wind, [Xi, Yi]),
+	get(State, [Xi, Yi], Slot),
+	Slot = Opp, % Opponent found.
+	% Keep looking if the opponent should be flipped.
+	flipSlots(State, Plyr, Opp, [Xi, Yi], Wind, FlippedState),
+	% Make the flip.
+	set(FlippedState, NewState, [Xi, Yi], Plyr).
+
+
+% DO NOT CHANGE THIS BLOCK OF COMMENTS.
+%
+%%%%%%%%%%%%%%nextState(Plyr,Move,State,NewState,NextPlyr)%%%%%%%%%%%%%%%%%%%%
+%%
+%% define nextState(Plyr,Move,State,NewState,NextPlyr).
+%   - given that Plyr makes Move in State, it determines NewState (i.e. the next
+%     state) and NextPlayer (i.e. the next player who will move).
+nextState(Plyr, n, State, State, NextPlyr) :- nextPlyr(State, Plyr, NextPlyr).
+nextState(Plyr, [X, Y], State, NewState, NextPlyr) :-
+	makeMove(State, Plyr, [X, Y], NewState),
+	nextPlyr(NewState, Plyr, NextPlyr).
+
+nextPlyr(NewState, Plyr, NextPlyr) :-
+	getOpponent(Plyr, Opp),
+	(moves(Opp, NewState, []) ->
+		NextPlyr = Plyr
+	;
+		NextPlyr = Opp).
 
 */

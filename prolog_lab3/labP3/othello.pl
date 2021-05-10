@@ -173,7 +173,8 @@ terminal(State) :-
 checkMoves(State,Player, MoveList) :-
 	calcPlayerScore(State, Player, StoneList),
 	checkMoves(State, Player,StoneList, AllMoves), % stone list is coordinate of player stone for example [2,2] 
-	(AllMoves = [] -> MoveList = [pass] ; sort(AllMoves, MoveList)). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+	(AllMoves \= [] -> msort(AllMoves, MoveList) ; MoveList = [pass]). % IF allMoves are not empty THEN sort allmoves to moveList  ELSE set Movelist to contain pass move only
+%msort to remove possible duplicates, will not have duplicates it is correct though. But i guess good to be safe.
 
 checkMoves(State, Player, [DxDy|Positions],MoveList) :-
 	%need to find the opposite player, then find possible moves.
@@ -215,10 +216,7 @@ getAllMoves(State,Player, OtherPlayer,StoneList, Moves) :-
 
 getAllMoves(State, Player, OtherPlayer, StoneList, Moves, [FirstCheck|Rest]) :-
     getAllMoves(State, Player, OtherPlayer, StoneList, Next_Moves, Rest),
-    (getAMove(State,Player,OtherPlayer, StoneList, FirstCheck, Player, ThisMove) ->
-        Moves = [ThisMove|Next_Moves] 
-    ; 
-        Moves = Next_Moves).
+    (getAMove(State,Player,OtherPlayer, StoneList, FirstCheck, Player, ThisMove) -> Moves = [ThisMove|Next_Moves] ; Moves = Next_Moves).
 
 getAllMoves(_,_,_,_,[],[]). %base
 
@@ -231,14 +229,7 @@ getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
     write(Y),
     iterMatrix(State, [X,Y], Square),
     \+(Square = Player),
-    ( 
-        (Square = OtherPlayer),
-        getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove)
-    ; 
-        (Square = ., P = OtherPlayer),
-         
-        ThisMove = [X,Y]
-    ). %check other player stone in "the way".
+    ( (Square = OtherPlayer),getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove) ; (Square = ., P = OtherPlayer) , ThisMove = [X,Y]). %check other player stone in "the way".
 
 getOtherPlayer(Me, Other) :-
 	Me = 1 -> Other is 2 ; Other is 1.
@@ -273,6 +264,9 @@ printList([H | L]) :-
 %   - returns list MvList of all legal moves Plyr can make in State
 %
 
+%so i guess i did this in terminal
+
+moves(Plyr, State MvList) :- checkMoves(State, Plyr, MvList).
 
 
 
@@ -286,6 +280,7 @@ printList([H | L]) :-
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
+nextState(Plyr, Move State, NewState, NextPlyr) :-
 
 
 
