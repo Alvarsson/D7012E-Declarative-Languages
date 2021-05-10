@@ -1,0 +1,16 @@
+these might be missleading since I had "most stones win" set, but that is fixed now.
+
+testboard1:
+Val: -100
+BestMv = [0, 0],
+SeF = 2707 .
+
+testboard2:
+Val = -100,
+BestMv = [1, 3],
+SeF = 1151 
+
+testboard3:
+Val = -100,
+BestMv = [0, 5],
+SeF = 43678 

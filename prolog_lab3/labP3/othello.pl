@@ -266,7 +266,7 @@ printList([H | L]) :-
 
 %so i guess i did this in terminal
 
-moves(Plyr, State MvList) :- checkMoves(State, Plyr, MvList).
+moves(Plyr, State, MvList) :- checkMoves(State, Plyr, MvList).
 
 
 
@@ -280,7 +280,77 @@ moves(Plyr, State MvList) :- checkMoves(State, Plyr, MvList).
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
-nextState(Plyr, Move State, NewState, NextPlyr) :-
+%first cover the "base case" of a pass move, should
+%So what i want to do is to create a function that changes player stones in case a valid move was made
+% also a function that 
+nextState(Plyr, pass, State, State, NextPlyr) :- 
+    %NewState is State,
+    nextPlayer(State, Plyr, NextPlyr). 
+%move is in list form of [int, int]
+nextState(Plyr, [Cx,Cy], State, NewState, NextPlyr) :-
+    % Need to check if move is legit, and if so do a stone change.
+    % So no pass, thus this move must be made !as long as it conforms to legit move list!
+    doMove(State, Plyr, [Cx,Cy], NewState),
+    nextPlayer(State, Plyr, NextPlyr).
+    
+    %validmove() no need since we call this in play.pl
+
+doMove(State, Player, Move, NextState) :-
+    % set( Board, NewBoard, [X, Y], Value): set the value of the board at position
+    getOtherPlayer(Player, OtherPlayer),
+    directions(C_List),
+    set(State, NewBoard, Move, Player),
+    doMove(NewBoard, Player, OtherPlayer, Move, C_List, NextState).
+
+doMove(State, Player, OtherPlayer, Move, [C|NextC], NextState) :-
+    (changeStones(State, Player, OtherPlayer, Move, C, ChangedState) -> Change = ChangedState ; Change = State),
+    doMove(Change, Player, OtherPlayer, Move, NextC, NextState).
+doMove(S,_,_,_,[],S).
+
+%doMove(NState, Player, Move, NextState, OtherPlayer, [C|NextC]) :-
+    % change state if possible, otherwise give back same state
+%    (changeStones(NState, Player, Move, OtherPlayer,C, StateChanged) -> Change = StateChanged ; Change = NState),
+%    doMove(Change, Player, Move, NextState, OtherPlayer, NextC).
+
+%doMove(S, _,_,[],_,S).
+
+changeStones(State, Player,_, [Cx,Cy],[Nx,Ny],State) :-
+    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),% Should have done a function for this procedure
+    getCoordinate(NewCoordinates, 0, X),
+    getCoordinate(NewCoordinates, 1, Y),
+    iterMatrix(State, [X,Y], Player). 
+
+
+changeStones(State, Player, OtherPlayer, [Cx,Cy], [Nx,Ny],NState) :-
+    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
+    getCoordinate(NewCoordinates, 0, X),
+    getCoordinate(NewCoordinates, 1, Y),
+    iterMatrix(State, [X,Y], Square),
+    Square = OtherPlayer,
+    changeStones(State, Player, OtherPlayer, [X,Y], [Nx,Ny], ChangedState),
+    set(ChangedState, NState, [X,Y], Player).
+%Not "doable" if player stone thus stop rec
+%changeStones(State, Player, [Cx, Cy],_, [Nx,Ny], State) :-
+%    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),% Should have done a function for this procedure
+%    getCoordinate(NewCoordinates, 0, X),
+%    getCoordinate(NewCoordinates, 1, Y),
+%    iterMatrix(State, [X,Y], Player). 
+
+%changeStones(State, Player, [Cx,Cy], OtherPlayer, [Nx,Ny], StateChanged) :-
+%    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
+%    getCoordinate(NewCoordinates, 0, X),
+%    getCoordinate(NewCoordinates, 1, Y),
+%    iterMatrix(State, [X,Y], Square), %Checking only for opponent stones
+%    Square = OtherPlayer,
+%    changeStones(State, Player, [X,Y], OtherPlayer, [Nx,Ny], SChange),
+%    set(SChange, StateChanged, [X,Y], Player).
+
+
+%need to 
+nextPlayer(State, Player, NextPlayer) :-
+    getOtherPlayer(Player, OtherPlayer), % simply get other player from helper
+    (checkMoves(State, OtherPlayer,[]) -> NextPlayer = Player ; NextPlayer = OtherPlayer).
+
 
 
 
@@ -292,9 +362,13 @@ nextState(Plyr, Move State, NewState, NextPlyr) :-
 %% define validmove(Plyr,State,Proposed). 
 %   - true if Proposed move by Plyr is valid at State.
 
+validmove(Plyr, State, Proposed) :-
+    checkMoves(State, Plyr, MoveList),
+    goodMove(Proposed, MoveList), !.
 
-
-
+goodMove(Proposed, [Proposed|Rest]).
+goodMove(Proposed, [NotThisMove|Rest]) :-
+    goodMove(Proposed, Rest).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -308,6 +382,10 @@ nextState(Plyr, Move State, NewState, NextPlyr) :-
 %          the value of state (see handout on ideas about
 %          good heuristics.
 
+h(State, 0) :- tie(State),!.
+h(State, 100) :- winner(State, 1),!.
+h(State, -100) :- winner(State, 2),!.
+h(_, 0). 
 
 
 
@@ -320,6 +398,7 @@ nextState(Plyr, Move State, NewState, NextPlyr) :-
 %   - returns a value B that is less than the actual or heuristic value
 %     of all states.
 
+lowerBound(-101).
 
 
 
@@ -332,7 +411,7 @@ nextState(Plyr, Move State, NewState, NextPlyr) :-
 %   - returns a value B that is greater than the actual or heuristic value
 %     of all states.
 
-
+upperBound(101).
 
 
 

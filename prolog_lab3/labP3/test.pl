@@ -269,52 +269,82 @@ getOtherPlayer(Me, Other) :-
 
 
 %------------------------------------------------------------------
-nextState(Plyr, [pass], State, NewState, NextPlyr) :- 
-    NewState is State,
+nextState(Plyr, pass, State, State, NextPlyr) :- 
+    %NewState is State,
     nextPlayer(State, Plyr, NextPlyr). 
 %move is in list form of [int, int]
-nextState(Plyr, Move, State, NewState, NextPlyr) :-
+nextState(Plyr, [Cx,Cy], State, NewState, NextPlyr) :-
     % Need to check if move is legit, and if so do a stone change.
     % So no pass, thus this move must be made !as long as it conforms to legit move list!
-    doMove(State, Plyr, Move, NewState),
+    doMove(State, Plyr, [Cx,Cy], NewState),
     nextPlayer(State, Plyr, NextPlyr).
     
     %validmove() no need since we call this in play.pl
 
 doMove(State, Player, Move, NextState) :-
     % set( Board, NewBoard, [X, Y], Value): set the value of the board at position
-    set(State, NewState, Move, Value),
     getOtherPlayer(Player, OtherPlayer),
     directions(C_List),
-    doMove(NewState, Value, Move, NextState, OtherPlayer, C_List).
+    set(State, NewBoard, Move, Player),
+    doMove(NewBoard, Player, OtherPlayer, Move, C_List, NextState).
 
-doMove(NState, Player, Move, NextState, OtherPlayer, [C|NextC]) :-
+doMove(State, Player, OtherPlayer, Move, [C|NextC], NextState) :-
+    (changeStones(State, Player, OtherPlayer, Move, C, ChangedState) -> Change = ChangedState ; Change = State),
+    doMove(Change, Player, OtherPlayer, Move, NextC, NextState).
+doMove(S,_,_,_,[],S).
+
+%doMove(NState, Player, Move, NextState, OtherPlayer, [C|NextC]) :-
     % change state if possible, otherwise give back same state
-    (changeStones(NState, Player, Move, OtherPlayer,C, StateChanged) -> Change = StateChanged ; Change = NState),
-    doMove(Change, Player, Move, NextState, OtherPlayer, NextC).
+%    (changeStones(NState, Player, Move, OtherPlayer,C, StateChanged) -> Change = StateChanged ; Change = NState),
+%    doMove(Change, Player, Move, NextState, OtherPlayer, NextC).
 
-%Not "doable" if player stone thus stop rec
-changeStones(State, Player, [Cx, Cy],_, [Nx,Ny], State) :-
+%doMove(S, _,_,[],_,S).
+
+changeStones(State, Player,_, [Cx,Cy],[Nx,Ny],State) :-
     addLists([Cx,Cy], [Nx, Ny], NewCoordinates),% Should have done a function for this procedure
     getCoordinate(NewCoordinates, 0, X),
     getCoordinate(NewCoordinates, 1, Y),
     iterMatrix(State, [X,Y], Player). 
 
-changeStones(State, Player, [Cx,Cy], OtherPlayer, [Nx,Ny], StateChanged) :-
+
+changeStones(State, Player, OtherPlayer, [Cx,Cy], [Nx,Ny],NState) :-
     addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
     getCoordinate(NewCoordinates, 0, X),
     getCoordinate(NewCoordinates, 1, Y),
-    iterMatrix(State, [X,Y], Square), %Checking only for opponent stones
+    iterMatrix(State, [X,Y], Square),
     Square = OtherPlayer,
-    changeStones(State, Player, [X,Y], OtherPlayer, [Nx|Ny], SChange),
-    set(SChange, StateChanged, [X,Y], Player).
+    changeStones(State, Player, OtherPlayer, [X,Y], [Nx,Ny], ChangedState),
+    set(ChangedState, NState, [X,Y], Player).
+%Not "doable" if player stone thus stop rec
+%changeStones(State, Player, [Cx, Cy],_, [Nx,Ny], State) :-
+%    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),% Should have done a function for this procedure
+%    getCoordinate(NewCoordinates, 0, X),
+%    getCoordinate(NewCoordinates, 1, Y),
+%    iterMatrix(State, [X,Y], Player). 
+
+%changeStones(State, Player, [Cx,Cy], OtherPlayer, [Nx,Ny], StateChanged) :-
+%    addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
+%    getCoordinate(NewCoordinates, 0, X),
+%    getCoordinate(NewCoordinates, 1, Y),
+%    iterMatrix(State, [X,Y], Square), %Checking only for opponent stones
+%    Square = OtherPlayer,
+%    changeStones(State, Player, [X,Y], OtherPlayer, [Nx,Ny], SChange),
+%    set(SChange, StateChanged, [X,Y], Player).
 
 
 %need to 
 nextPlayer(State, Player, NextPlayer) :-
     getOtherPlayer(Player, OtherPlayer), % simply get other player from helper
-    (checkMoves(State, OtherPlayer, []) -> NextPlayer = Player, NextPlayer = OtherPlayer).
+    (checkMoves(State, OtherPlayer,[]) -> NextPlayer = Player ; NextPlayer = OtherPlayer).
 
+
+validmove(Plyr, State, Proposed) :-
+    checkMoves(State, Plyr, MoveList),
+    goodMove(Proposed, MoveList), !.
+
+goodMove(Proposed, [Proposed|Rest]).
+goodMove(Proposed, [NotThisMove|Rest]) :-
+    goodMove(Proposed, Rest).
 
 %---------------------------------------------------------------------
 
