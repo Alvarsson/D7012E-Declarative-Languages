@@ -101,7 +101,7 @@ winner(State,Plyr) :-
 	getScore(State, 1, Plyr1Score),!,
     getScore(State, 2, Plyr2Score),!,
 	Plyr1Score =\= Plyr2Score,
-	((Plyr1Score < Plyr2Score) ->  Plyr = 2 ; Plyr = 1).%if then else predicate
+	((Plyr1Score < Plyr2Score) ->  Plyr = 1 ; Plyr = 2).%if then else predicate
 
 getScore(State, Player, PlayerScore) :-
     calcPlayerScore(State, Player, ScoreList),!,
