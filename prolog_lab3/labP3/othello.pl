@@ -68,7 +68,7 @@
 
 initBoard([ [.,.,.,.,.,.], 
             [.,.,.,.,.,.],
-	    	[.,.,1,2,.,.], 
+	    	[.,.,1,2,2,.], 
 	    	[.,.,2,1,.,.], 
             [.,.,.,.,.,.], 
 	    	[.,.,.,.,.,.] ]).
@@ -125,8 +125,8 @@ calcPlayerScore(State, Player, Score, I, J) :-
 
 %iterate function based on https://stackoverflow.com/questions/34949724/prolog-iterate-through-matrix
 iterMatrix(State,[I,J], Value) :-
-    nth0(I, State, Row),
-    nth0(J, Row, Value).
+    nth0(J, State, Row),
+    nth0(I, Row, Value).
 /** part of number increment attempt, lists is most likely smarter.
 checkVal('.',_,_, 0).
 checkVal(Value, Player,_, 0) :- Value \= Player.
@@ -225,8 +225,8 @@ getAMove(State, Player, OtherPlayer, [Cx, Cy], [Nx,Ny], P, ThisMove) :-
     %getCoordinates(NewCoordinates, X, Y),
     getCoordinate(NewCoordinates,0,X),
     getCoordinate(NewCoordinates,1,Y),
-    write(X),
-    write(Y),
+    %write(X),
+    %write(Y),
     iterMatrix(State, [X,Y], Square),
     \+(Square = Player),
     ( (Square = OtherPlayer),getAMove(State, Player, OtherPlayer, [X, Y], [Nx,Ny], OtherPlayer, ThisMove) ; (Square = ., P = OtherPlayer) , ThisMove = [X,Y]). %check other player stone in "the way".
@@ -321,7 +321,7 @@ changeStones(State, Player,_, [Cx,Cy],[Nx,Ny],State) :-
     iterMatrix(State, [X,Y], Player). 
 
 
-changeStones(State, Player, OtherPlayer, [Cx,Cy], [Nx,Ny],NState) :-
+changeStones(State, Player, OtherPlayer, [Cx,Cy],[Nx,Ny],NState) :-
     addLists([Cx,Cy], [Nx, Ny], NewCoordinates),
     getCoordinate(NewCoordinates, 0, X),
     getCoordinate(NewCoordinates, 1, Y),
